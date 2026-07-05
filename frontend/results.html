@@ -366,7 +366,7 @@
 
             // Use backend chat (Groq)
             try {
-                const response = await fetch('http://localhost:8000/chat', {
+                const response = await fetch('https://nitya2406-llmprop-backend.hf.space', {
                     method:  'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
