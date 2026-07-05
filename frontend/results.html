@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results - AI Material Property Predictor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <canvas id="background-canvas"></canvas>
+    
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <h2>AI Materials</h2>
+            </div>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="user_mode.html" class="nav-link">User Mode</a>
+                <a href="researcher_mode.html" class="nav-link">Researcher</a>
+                <a href="results.html" class="nav-link active">Results</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="results-page">
+        <div class="results-container">
+            <div class="loading-overlay" id="loading-overlay">
+                <div class="loading-spinner"></div>
+                <p class="loading-text">Analyzing material properties...</p>
+            </div>
+            
+            <div class="results-content" id="results-content" style="display: none;">
+                <div class="mode-indicator">
+                    <span class="mode-badge" id="mode-badge">Mode</span>
+                </div>
+                
+                <h1 class="page-title">Prediction Results</h1>
+                <div class="material-info" id="material-info">
+                    <h2 id="material-name-display">Material Name</h2>
+                    <p id="material-details">Material details will appear here</p>
+                </div>
+                
+                <div class="properties-grid" id="properties-grid">
+                    <!-- Properties will be dynamically added here -->
+                </div>
+                
+                <div class="applications-section">
+                    <h2>Possible Applications</h2>
+                    <div class="applications-grid" id="applications-grid">
+                        <!-- Applications will be dynamically added here -->
+                    </div>
+                </div>
+                
+                <div class="results-actions">
+                    <a href="index.html" class="action-btn">New Prediction</a>
+                    <button class="action-btn" onclick="exportResults()">Export Results</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- AI Chatbot -->
+    <div class="ai-chatbot-container">
+        <button class="ai-chatbot-toggle" id="ai-chatbot-toggle">
+            <span class="ai-icon">🤖</span>
+            <span class="ai-label">AI Assistant</span>
+        </button>
+        
+        <div class="ai-chatbot-panel" id="ai-chatbot-panel">
+            <div class="ai-chatbot-header">
+                <div class="ai-header-content">
+                    <span class="ai-avatar">🤖</span>
+                    <div class="ai-info">
+                        <h3>AI Materials Assistant</h3>
+                        <p>Ask me about your material predictions</p>
+                    </div>
+                </div>
+                <button class="ai-close-btn" id="ai-close-btn">×</button>
+            </div>
+            
+            <div class="ai-chatbot-messages" id="ai-chatbot-messages">
+                <div class="ai-message bot-message">
+                    <p>Hello! I'm your AI Materials Assistant. I can help you understand your material predictions, explain properties, and suggest applications. What would you like to know?</p>
+                </div>
+            </div>
+            
+            <div class="ai-chatbot-input">
+                <input type="text" id="ai-chatbot-input" placeholder="Ask about your material properties..." />
+                <button id="ai-send-btn">Send</button>
+            </div>
+            
+            <div class="ai-quick-questions">
+                <h4>Quick Questions:</h4>
+                <div class="question-buttons">
+                    <button class="question-btn" onclick="askQuestion('What does bandgap mean?')">What does bandgap mean?</button>
+                    <button class="question-btn" onclick="askQuestion('How stable is this material?')">How stable is this material?</button>
+                    <button class="question-btn" onclick="askQuestion('What applications are best suited?')">What applications are best suited?</button>
+                    <button class="question-btn" onclick="askQuestion('Explain formation energy')">Explain formation energy</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="background.js"></script>
+    <script src="script.js"></script>
+    <script>
+    let predictionResults = {};
+    let currentMode       = '';
+    let materialData      = {};
+
+    // ── Display Results ────────────────────────────────
+    function displayResults() {
+        const storedMaterial   = localStorage.getItem('materialData');
+        const storedPrediction = localStorage.getItem('predictionData');
+
+        if (!storedMaterial || !storedPrediction) {
+            window.location.href = 'index.html';
+            return;
+        }
+
+        materialData      = JSON.parse(storedMaterial);
+        predictionResults = JSON.parse(storedPrediction);
+        currentMode       = materialData.mode || 'user';
+
+        // Mode badge
+        const modeBadge = document.getElementById('mode-badge');
+        modeBadge.textContent = currentMode === 'user'
+            ? '👤 User Mode'
+            : '🔬 Researcher Mode';
+
+        // Material info
+        let materialName = predictionResults.formula || 'Crystal Material';
+        let details      = '';
+
+        if (currentMode === 'user') {
+            materialName = materialData.materialName || materialName;
+            details = `Elements: ${materialData.elements} | 
+                       Crystal System: ${materialData.crystalSystem} | 
+                       Coordination: ${materialData.coordinationNumber}`;
+        } else {
+            details = `Advanced crystal structure analysis`;
+        }
+
+        document.getElementById('material-name-display').textContent = materialName;
+        document.getElementById('material-details').textContent      = details;
+
+        setTimeout(() => {
+            // ── Properties ──────────────────────────────
+            const propertiesGrid = document.getElementById('properties-grid');
+            propertiesGrid.innerHTML = '';
+
+            const properties = [
+                {
+                    key:   'band_gap',
+                    label: 'Band Gap',
+                    value: predictionResults.band_gap,
+                    unit:  'eV',
+                    icon:  '⚡'
+                },
+                {
+                    key:   'volume',
+                    label: 'Volume',
+                    value: predictionResults.volume,
+                    unit:  'Å³',
+                    icon:  '📦'
+                },
+                {
+                    key:   'formation_energy_per_atom',
+                    label: 'Formation Energy',
+                    value: predictionResults.formation_energy_per_atom,
+                    unit:  'eV/atom',
+                    icon:  '🔥'
+                },
+                {
+                    key:   'e_above_hull',
+                    label: 'E Above Hull',
+                    value: predictionResults.e_above_hull,
+                    unit:  'eV/atom',
+                    icon:  '📏'
+                },
+                {
+                    key:   'energy_per_atom',
+                    label: 'Energy Per Atom',
+                    value: predictionResults.energy_per_atom,
+                    unit:  'eV',
+                    icon:  '⚛️'
+                },
+                {
+                    key:   'is_gap_direct',
+                    label: 'Band Type',
+                    value: predictionResults.is_gap_direct ? 'Direct' : 'Indirect',
+                    unit:  'Type',
+                    icon:  '🌊'
+                },
+                {
+                    key:   'material_class',
+                    label: 'Material Class',
+                    value: predictionResults.material_class,
+                    unit:  '',
+                    icon:  '🧪'
+                }
+            ];
+
+            properties.forEach((prop, index) => {
+                const card = document.createElement('div');
+                card.className = 'property-card';
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.innerHTML = `
+                    <div class="property-icon">${prop.icon}</div>
+                    <h3>${prop.label}</h3>
+                    <div class="property-value">${
+                        typeof prop.value === 'number'
+                            ? prop.value.toFixed(4)
+                            : prop.value
+                    }</div>
+                    <div class="property-unit">${prop.unit}</div>
+                `;
+                propertiesGrid.appendChild(card);
+            });
+
+            // ── Applications ────────────────────────────
+            const applications = generateApplications(predictionResults);
+            const appGrid      = document.getElementById('applications-grid');
+            appGrid.innerHTML  = '';
+
+            applications.forEach((app, index) => {
+                const card = document.createElement('div');
+                card.className = 'application-card';
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.innerHTML = `
+                    <div class="app-icon">${app.icon}</div>
+                    <h3>${app.title}</h3>
+                    <p>${app.description}</p>
+                `;
+                appGrid.appendChild(card);
+            });
+
+            document.getElementById('loading-overlay').style.display  = 'none';
+            document.getElementById('results-content').style.display  = 'block';
+
+        }, 1500);
+    }
+
+    // ── Generate Applications ──────────────────────────
+    function generateApplications(predictions) {
+        const applications = [];
+        const bandgap  = parseFloat(predictions.band_gap   || 0);
+        const ehull    = parseFloat(predictions.e_above_hull || 0);
+        const isDirect = predictions.is_gap_direct;
+
+        if (bandgap < 0.1)
+            applications.push({
+                title: 'Metallic Conductor',
+                description: 'Zero or near-zero bandgap makes it ideal for electrical conduction.',
+                icon: '⚡'
+            });
+        else if (bandgap < 1.5)
+            applications.push({
+                title: 'Semiconductor Devices',
+                description: 'Small bandgap suitable for transistors and electronic components.',
+                icon: '💻'
+            });
+        else if (bandgap < 3.0)
+            applications.push({
+                title: 'Optoelectronic Devices',
+                description: 'Moderate bandgap ideal for LEDs, photodetectors, and solar cells.',
+                icon: '💡'
+            });
+        else
+            applications.push({
+                title: 'Insulator / Dielectric',
+                description: 'Large bandgap excellent for electrical insulation and dielectric layers.',
+                icon: '🔌'
+            });
+
+        if (ehull < 0.02)
+            applications.push({
+                title: 'Thermodynamically Stable',
+                description: 'Low energy above hull — excellent for long-term structural use.',
+                icon: '🛡️'
+            });
+
+        if (isDirect)
+            applications.push({
+                title: 'Light Emitting Devices',
+                description: 'Direct bandgap enables efficient light emission for LEDs and lasers.',
+                icon: '🔦'
+            });
+        else
+            applications.push({
+                title: 'Electronic Components',
+                description: 'Indirect bandgap suited for conventional electronic devices.',
+                icon: '🔬'
+            });
+
+        applications.push({
+            title: 'Energy Storage',
+            description: 'Electronic properties suggest potential for battery electrode materials.',
+            icon: '🔋'
+        });
+
+        return applications.slice(0, 4);
+    }
+
+    // ── Export ─────────────────────────────────────────
+    function exportResults() {
+        const exportData = {
+            mode:        currentMode,
+            material:    materialData,
+            predictions: predictionResults,
+            timestamp:   new Date().toISOString()
+        };
+
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'
+                      + encodeURIComponent(dataStr);
+        const link    = document.createElement('a');
+        link.setAttribute('href',     dataUri);
+        link.setAttribute('download', `prediction_${Date.now()}.json`);
+        link.click();
+    }
+
+    // ── AI Chatbot ─────────────────────────────────────
+    const aiChatbot = {
+        init() {
+            this.toggleBtn = document.getElementById('ai-chatbot-toggle');
+            this.panel     = document.getElementById('ai-chatbot-panel');
+            this.closeBtn  = document.getElementById('ai-close-btn');
+            this.input     = document.getElementById('ai-chatbot-input');
+            this.sendBtn   = document.getElementById('ai-send-btn');
+            this.messages  = document.getElementById('ai-chatbot-messages');
+            this.setupEventListeners();
+        },
+
+        setupEventListeners() {
+            this.toggleBtn.addEventListener('click', () => this.toggle());
+            this.closeBtn.addEventListener('click',  () => this.hide());
+            this.sendBtn.addEventListener('click',   () => this.sendMessage());
+            this.input.addEventListener('keypress',  (e) => {
+                if (e.key === 'Enter') this.sendMessage();
+            });
+        },
+
+        toggle() { this.panel.classList.toggle('active'); },
+        hide()   { this.panel.classList.remove('active'); },
+
+        // ── Conversation history ──────────────────────
+        conversationHistory: [],
+
+        async sendMessage() {
+            const message = this.input.value.trim();
+            if (!message) return;
+
+            this.addMessage(message, 'user');
+            this.input.value = '';
+
+            // Track history for multi-turn context
+            this.conversationHistory.push({ role: 'user', content: message });
+
+            const typingId = this.showTyping();
+
+            const matName = materialData.materialName || predictionResults.formula || 'Unknown Material';
+
+            // Use backend chat (Groq)
+            try {
+                const response = await fetch('http://localhost:8000/chat', {
+                    method:  'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: message,
+                        history: this.conversationHistory.slice(-6), // send last 6 turns
+                        context: {
+                            ...predictionResults,
+                            material_name: matName
+                        }
+                    })
+                });
+
+                this.removeTyping(typingId);
+
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    throw new Error(err.detail || 'Chat failed');
+                }
+
+                const data = await response.json();
+                this.addMessage(data.reply, 'bot');
+
+                // Save assistant reply to history
+                this.conversationHistory.push({ role: 'assistant', content: data.reply });
+
+            } catch (error) {
+                this.removeTyping(typingId);
+                // Graceful offline fallback — answer from built-in knowledge
+                const reply = this.offlineAnswer(message, predictionResults, matName);
+                this.addMessage(reply, 'bot');
+                this.conversationHistory.push({ role: 'assistant', content: reply });
+            }
+        },
+
+        offlineAnswer(message, props, matName) {
+            const msg = message.toLowerCase();
+            const bg  = parseFloat(props.band_gap   || 0);
+            const eh  = parseFloat(props.e_above_hull || 0);
+            const fe  = parseFloat(props.formation_energy_per_atom || 0);
+            const cls = props.material_class || 'Unknown';
+            const direct = props.is_gap_direct;
+
+            if (msg.includes('bandgap') || msg.includes('band gap')) {
+                return `The band gap of ${matName} is ${bg.toFixed(4)} eV. ` +
+                    (bg < 0.1 ? 'This near-zero band gap means it behaves as a metal — electrons flow freely.' :
+                     bg < 3.0 ? 'This moderate band gap classifies it as a semiconductor, useful for electronics and solar cells.' :
+                     'This large band gap makes it an insulator, ideal for dielectric applications.');
+            }
+            if (msg.includes('stable') || msg.includes('hull') || msg.includes('stability')) {
+                return `The energy above hull is ${eh.toFixed(4)} eV/atom. ` +
+                    (eh < 0.025 ? `${matName} is thermodynamically stable — excellent for long-term structural applications.` :
+                     eh < 0.1   ? `${matName} is metastable — it can exist but may transform under certain conditions.` :
+                     `${matName} is unstable relative to competing phases.`);
+            }
+            if (msg.includes('formation') || msg.includes('formation energy')) {
+                return `The formation energy of ${matName} is ${fe.toFixed(4)} eV/atom. ` +
+                    (fe < 0 ? 'A negative formation energy means the material is stable and releases energy when formed from its elements.' :
+                    'A positive formation energy means energy input is needed to form this material.');
+            }
+            if (msg.includes('application') || msg.includes('use') || msg.includes('suited')) {
+                if (cls === 'Metal') return `${matName} is a metal with high electrical conductivity, suitable for electrodes, interconnects, and conductive coatings.`;
+                if (bg < 1.5)  return `${matName} has a small band gap ideal for transistors, infrared detectors, and thermoelectric devices.`;
+                if (bg < 3.0)  return `${matName} is well suited for solar cells, LEDs, and photodetectors due to its moderate band gap.`;
+                return `${matName} has a large band gap making it ideal for high-power electronics, UV optics, and insulating layers.`;
+            }
+            if (msg.includes('direct') || msg.includes('indirect')) {
+                return direct
+                    ? `${matName} has a direct band gap, meaning electrons can transition between bands by emitting photons directly — ideal for LEDs and lasers.`
+                    : `${matName} has an indirect band gap. Phonons are required for electron transitions, making it less efficient for light emission but suitable for conventional electronics.`;
+            }
+            if (msg.includes('volume')) {
+                return `The predicted unit cell volume of ${matName} is ${props.volume} Å³. This reflects the size of the repeating crystal unit and relates to the density and packing of atoms.`;
+            }
+            return `${matName} is predicted to be a ${cls} with a band gap of ${bg.toFixed(3)} eV, ` +
+                   `${direct ? 'direct' : 'indirect'} band type, and an energy above hull of ${eh.toFixed(4)} eV/atom. ` +
+                   `Start the backend (uvicorn main:app --reload) for full AI responses.`;
+        },
+
+        addMessage(text, type) {
+            const div = document.createElement('div');
+            div.className = `ai-message ${type}-message`;
+            div.innerHTML = `<p>${text}</p>`;
+            this.messages.appendChild(div);
+            this.messages.scrollTop = this.messages.scrollHeight;
+        },
+
+        showTyping() {
+            const id  = 'typing-' + Date.now();
+            const div = document.createElement('div');
+            div.className = 'ai-message bot-message';
+            div.id        = id;
+            div.innerHTML = '<p>Thinking...</p>';
+            this.messages.appendChild(div);
+            this.messages.scrollTop = this.messages.scrollHeight;
+            return id;
+        },
+
+        removeTyping(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+    };
+
+    // ── Quick Questions ────────────────────────────────
+    window.askQuestion = function(question) {
+        const panel = document.getElementById('ai-chatbot-panel');
+        if (!panel.classList.contains('active')) {
+            panel.classList.add('active');
+        }
+        document.getElementById('ai-chatbot-input').value = question;
+        aiChatbot.sendMessage();
+    };
+
+    // ── Init ───────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        aiChatbot.init();
+    });
+
+    window.addEventListener('load', displayResults);
+</script>
+</body>
+</html>

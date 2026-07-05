@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Researcher Mode - AI Material Property Predictor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <canvas id="background-canvas"></canvas>
+    
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <h2>AI Materials</h2>
+            </div>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="user_mode.html" class="nav-link">User Mode</a>
+                <a href="researcher_mode.html" class="nav-link active">Researcher</a>
+                <a href="results.html" class="nav-link">Results</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="prediction-page">
+        <div class="prediction-container">
+            <div class="mode-indicator">
+                <span class="mode-badge">🔬 Researcher Mode</span>
+            </div>
+            
+            <h1 class="page-title">Crystal Structure Analysis</h1>
+            <p class="page-subtitle">Enter a natural language crystal description (Robocrystallographer / TextEdge format) for AI property prediction</p>
+            
+            <form id="researcher-prediction-form" class="prediction-form">
+                <div class="form-group">
+                    <label for="crystal-structure">Crystal Structure Description</label>
+                    <textarea 
+                        id="crystal-structure" 
+                        name="crystal-structure" 
+                        placeholder="Paste a Robocrystallographer-style crystal description here. Click 'Load Example' below to see the correct format." 
+                        rows="12"
+                        required
+                    ></textarea>
+                </div>
+
+                <div class="help-section" style="margin-bottom: 1.5rem;">
+                    <h3>Expected Input Format</h3>
+                    <p style="color: var(--text-secondary, #aaa); font-size: 0.9rem; margin-bottom: 0.8rem;">
+                        This model was trained on <strong>TextEdge</strong> crystal text descriptions (Robocrystallographer format from Materials Project). 
+                        Your input should follow this natural-language structure:
+                    </p>
+                    <div class="format-examples">
+                        <div class="example">
+                            <strong>✅ Correct format:</strong>
+                            <code style="display:block; white-space:pre-wrap; font-size:0.78rem; margin-top:0.4rem;">[Formula] crystallizes in the [crystal_system] crystal system. It belongs to the [space_group] space group. The structure contains [N] atomic sites with the following elements: [El1 (1), El2 (2), ...]. The atoms form [coord_type] coordination. The unit cell lattice parameters are a=[Å], b=[Å], c=[Å] Angstroms, with angles alpha=[°], beta=[°], gamma=[°] and a unit cell volume of [Å³] cubic Angstroms.</code>
+                        </div>
+                        <div class="example" style="margin-top:0.8rem;">
+                            <button type="button" class="action-btn" style="font-size:0.85rem; padding:0.5rem 1rem;" onclick="loadExample()">Load Example (Silicon)</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="predict-btn">Predict Material Properties</button>
+            </form>
+        </div>
+    </main>
+
+    <script src="background.js"></script>
+    <script src="script.js"></script>
+    <script>
+    const EXAMPLES = {
+        silicon: `Si2 crystallizes in the cubic crystal system. It belongs to the Fd-3m space group. Si is bonded to four equivalent Si atoms to form corner-sharing SiSi4 tetrahedra. All Si-Si bond lengths are 2.37 Angstrom. The unit cell lattice parameters are a=5.431, b=5.431, c=5.431 Angstroms, with angles alpha=90.0, beta=90.0, gamma=90.0 and a unit cell volume of 160.053 cubic Angstroms.`,
+
+        gaas: `GaAs crystallizes in the cubic crystal system. It belongs to the F-43m space group. Ga is bonded to four equivalent As atoms to form corner-sharing GaAs4 tetrahedra. All Ga-As bond lengths are 2.45 Angstrom. As is bonded to four equivalent Ga atoms to form corner-sharing AsGa4 tetrahedra. The unit cell lattice parameters are a=5.653, b=5.653, c=5.653 Angstroms, with angles alpha=90.0, beta=90.0, gamma=90.0 and a unit cell volume of 180.625 cubic Angstroms.`,
+
+        tio2: `TiO2 crystallizes in the tetragonal crystal system. It belongs to the P4_2/mnm space group. Ti is bonded to six O atoms to form TiO6 octahedra that share corners and edges. There are two shorter Ti-O bond lengths of 1.95 Angstrom and four longer Ti-O bond lengths of 1.98 Angstrom. O is bonded in a distorted trigonal planar geometry to three equivalent Ti atoms. The unit cell lattice parameters are a=4.594, b=4.594, c=2.959 Angstroms, with angles alpha=90.0, beta=90.0, gamma=90.0 and a unit cell volume of 62.435 cubic Angstroms.`,
+
+        mgo: `MgO crystallizes in the cubic crystal system. It belongs to the Fm-3m space group. Mg is bonded to six equivalent O atoms to form a corner-sharing MgO6 octahedra. All Mg-O bond lengths are 2.13 Angstrom. O is bonded to six equivalent Mg atoms to form a corner-sharing OMg6 octahedra. The unit cell lattice parameters are a=4.211, b=4.211, c=4.211 Angstroms, with angles alpha=90.0, beta=90.0, gamma=90.0 and a unit cell volume of 74.698 cubic Angstroms.`
+    };
+
+    function loadExample(material) {
+        const key = material || 'silicon';
+        document.getElementById('crystal-structure').value = EXAMPLES[key];
+    }
+
+    document.getElementById('researcher-prediction-form')
+        .addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const btn = document.querySelector('.predict-btn');
+        btn.textContent = 'Analyzing...';
+        btn.disabled = true;
+
+        // Replace this section in researcher_mode.html
+
+const description = document.getElementById('crystal-structure').value.trim();
+
+// ── Validation 1: Too short ──────────────────────────
+if (description.length < 50) {
+    alert('Please enter a complete crystal structure description.');
+    btn.textContent = 'Predict Material Properties';
+    btn.disabled = false;
+    return;
+}
+
+// ── Validation 2: Must contain crystal keywords ──────
+const crystalKeywords = [
+    'crystallizes', 'crystal system', 'space group',
+    'angstrom', 'lattice', 'bonded', 'tetrahedra',
+    'octahedra', 'unit cell', 'bond length',
+    'cubic', 'tetragonal', 'hexagonal', 'monoclinic'
+];
+
+const descLower    = description.toLowerCase();
+const matchCount   = crystalKeywords.filter(
+    kw => descLower.includes(kw)
+).length;
+
+if (matchCount < 2) {
+    alert(
+        'Invalid input!\n\n' +
+        'Please paste a proper crystal structure description.\n\n' +
+        'It must mention:\n' +
+        '• Crystal system (cubic, hexagonal etc.)\n' +
+        '• Space group\n' +
+        '• Bond lengths in Angstroms\n' +
+        '• Lattice parameters\n\n' +
+        'Random text is not accepted.'
+    );
+    btn.textContent = 'Predict Material Properties';
+    btn.disabled = false;
+    return;
+}
+
+        const formData = {
+            mode:            'researcher',
+            crystalStructure: description
+        };
+
+        try {
+            const response = await fetch('http://localhost:8000/predict/text', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ description: description })
+            });
+
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.detail || 'Prediction failed');
+            }
+
+            const prediction = await response.json();
+
+            localStorage.setItem('materialData',   JSON.stringify(formData));
+            localStorage.setItem('predictionData', JSON.stringify(prediction));
+
+            window.location.href = 'results.html';
+
+        } catch (error) {
+            alert('Error: ' + error.message + '\n\nMake sure your backend is running:\n  cd backend && uvicorn main:app --reload');
+            btn.textContent = 'Predict Material Properties';
+            btn.disabled = false;
+        }
+    });
+</script>
+</body>
+</html>

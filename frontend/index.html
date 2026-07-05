@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Material Property Predictor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <canvas id="background-canvas"></canvas>
+    
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <h2>AI Materials</h2>
+            </div>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link active">Home</a>
+                <a href="user_mode.html" class="nav-link">User Mode</a>
+                <a href="researcher_mode.html" class="nav-link">Researcher</a>
+                <a href="results.html" class="nav-link">Results</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">AI Material Property Predictor</h1>
+            <p class="hero-subtitle">Predict crystal structure properties using artificial intelligence</p>
+        </div>
+
+        <div class="mode-selection">
+            <div class="mode-cards">
+                <div class="mode-card">
+                    <div class="card-icon">👤</div>
+                    <h3>User Mode</h3>
+                    <p>For students and beginners who want simple material predictions</p>
+                    <a href="user_mode.html" class="mode-btn">Start Prediction</a>
+                </div>
+                
+                <div class="mode-card">
+                    <div class="card-icon">🔬</div>
+                    <h3>Researcher Mode</h3>
+                    <p>For researchers who want to paste full crystal structure descriptions</p>
+                    <a href="researcher_mode.html" class="mode-btn">Research Mode</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="background.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

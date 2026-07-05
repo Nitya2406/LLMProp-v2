@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Mode - AI Material Property Predictor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <canvas id="background-canvas"></canvas>
+    
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <h2>AI Materials</h2>
+            </div>
+            <div class="nav-links">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="user_mode.html" class="nav-link active">User Mode</a>
+                <a href="researcher_mode.html" class="nav-link">Researcher</a>
+                <a href="results.html" class="nav-link">Results</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="prediction-page">
+        <div class="prediction-container">
+            <div class="mode-indicator">
+                <span class="mode-badge">👤 User Mode</span>
+            </div>
+            
+            <h1 class="page-title">Material Prediction</h1>
+            <p class="page-subtitle">Enter basic material information for AI-powered property prediction</p>
+            
+            <form id="user-prediction-form" class="prediction-form">
+                <div class="form-group">
+                    <label for="material-name">Material Name</label>
+                    <input type="text" id="material-name" name="material-name" placeholder="e.g., Silicon, Graphene" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="elements">Elements</label>
+                    <input type="text" id="elements" name="elements" placeholder="e.g., Si, C, O" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="crystal-system">Crystal System</label>
+                    <select id="crystal-system" name="crystal-system" required>
+                        <option value="">Select crystal system</option>
+                        <option value="cubic">Cubic</option>
+                        <option value="tetragonal">Tetragonal</option>
+                        <option value="orthorhombic">Orthorhombic</option>
+                        <option value="hexagonal">Hexagonal</option>
+                        <option value="trigonal">Trigonal</option>
+                        <option value="monoclinic">Monoclinic</option>
+                        <option value="triclinic">Triclinic</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="coordination-number">Coordination Number</label>
+                    <input type="number" id="coordination-number" name="coordination-number" placeholder="e.g., 4, 6, 8" min="1" max="12" required>
+                </div>
+                
+                <button type="submit" class="predict-btn">Predict Properties</button>
+            </form>
+        </div>
+    </main>
+
+    <script src="background.js"></script>
+    <script src="script.js"></script>
+    <script>
+    document.getElementById('user-prediction-form')
+        .addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const btn = document.querySelector('.predict-btn');
+        btn.textContent = 'Predicting...';
+        btn.disabled = true;
+
+        const formData = {
+            mode:               'user',
+            materialName:       document.getElementById('material-name').value,
+            elements:           document.getElementById('elements').value,
+            crystalSystem:      document.getElementById('crystal-system').value,
+            coordinationNumber: document.getElementById('coordination-number').value
+        };
+
+        try {
+            // Call your backend user mode route
+            const response = await fetch('http://localhost:8000/predict/user', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    material_name:       formData.materialName,
+                    elements:            formData.elements,
+                    crystal_system:      formData.crystalSystem,
+                    coordination_number: parseInt(formData.coordinationNumber)
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Prediction failed');
+            }
+
+            const prediction = await response.json();
+
+            // Store both form data and real predictions
+            localStorage.setItem('materialData',   JSON.stringify(formData));
+            localStorage.setItem('predictionData', JSON.stringify(prediction));
+
+            window.location.href = 'results.html';
+
+        } catch (error) {
+            alert('Error: ' + error.message + '\nMake sure your backend is running.');
+            btn.textContent = 'Predict Properties';
+            btn.disabled = false;
+        }
+    });
+</script>
+</body>
+</html>
