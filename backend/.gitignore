@@ -1,3 +1,2 @@
 .env
-*.pt
 __pycache__/
